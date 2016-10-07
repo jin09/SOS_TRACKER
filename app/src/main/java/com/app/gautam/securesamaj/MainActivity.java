@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -37,8 +38,6 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-
-import java.net.InetAddress;
 import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -111,42 +110,91 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     });
                     builder.show();
                 }
-                else{
-                String resultFromTask = null;
-                getAddressFromJSON task = new getAddressFromJSON();
-                try {
-                    resultFromTask = task.execute("").get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
+                else {
+                    if (mLastLocation == null) {
+                        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+                        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                            //to do
+                            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            builder.setCancelable(true);
+                            builder.setTitle("We were unable to find your location. But we can still inform your contacts.");
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //work to be done here
+                                    dialog.dismiss();
+                                    DateFormat dateFormatter = new SimpleDateFormat("hh : mm" + "*" + "\n" + "*" + "dd/MM/yyyy");
+                                    dateFormatter.setLenient(false);
+                                    Date today = new Date();
+                                    String s = dateFormatter.format(today);
+                                    Intent sendIntent = new Intent();
+                                    sendIntent.setAction(Intent.ACTION_SEND);
+                                    Log.d(TAG, String.valueOf(address));
+                                    sendIntent.putExtra(Intent.EXTRA_TEXT, "I am in *DANGER*....\n\n" +
+                                            "\uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98\n" +
+                                            "/ ___|    /  _ \\   / ___| \n" +
+                                            "\\___ \\   | |   | |   \\___ \\ \n" +
+                                            " ___) |   | |   | |    ___) |\n" +
+                                            "|____/   \\___/  |____/ \n" +
+                                            "\uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98" +
+                                            "\n\n" +
+                                            "Time : \n" + "*" + s + "*" + "\n\n" +
+                                            "_" + "This is an auto generated message.Download the android app now" + "_" + "\n" +
+                                            "http://ska-developers.appspot.com/SOS-android-app-beta/");
+                                    sendIntent.setType("text/plain");
+                                    sendIntent.setPackage("com.whatsapp");
+                                    startActivity(sendIntent);
+                                }
+                            });
+                            builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                            builder.show();
+                        } else {
+                            turnOnLocationSetting(MainActivity.this, mGoogleApiClient);
+                        }
+                    }
+                    else{
+                    String resultFromTask = null;
+                    getAddressFromJSON task = new getAddressFromJSON();
+                    try {
+                        resultFromTask = task.execute("").get();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                    //Log.d("whtsapp click",resultFromTask);
+                    DateFormat dateFormatter = new SimpleDateFormat("hh : mm" + "*" + "\n" + "*" + "dd/MM/yyyy");
+                    dateFormatter.setLenient(false);
+                    Date today = new Date();
+                    String s = dateFormatter.format(today);
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    Log.d(TAG, String.valueOf(address));
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "I am in *DANGER*....\n\n" +
+                            "\uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98\n" +
+                            "/ ___|    /  _ \\   / ___| \n" +
+                            "\\___ \\   | |   | |   \\___ \\ \n" +
+                            " ___) |   | |   | |    ___) |\n" +
+                            "|____/   \\___/  |____/ \n" +
+                            "\uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98" +
+                            "\n\n" +
+                            "Time : \n" + "*" + s + "*" + "\n\n" +
+                            "My exact location is : \n http://maps.google.com/maps?q=loc:"
+                            + String.valueOf(mLastLocation.getLatitude()) + "," +
+                            String.valueOf(mLastLocation.getLongitude()) +
+                            "\n\nand my estimated address is : \n\n" + "*" + resultFromTask + "*" + "\n\n" +
+                            "_" + "This is an auto generated message.Download the android app now" + "_" + "\n" +
+                            "http://ska-developers.appspot.com/SOS-android-app-beta/");
+                    sendIntent.setType("text/plain");
+                    sendIntent.setPackage("com.whatsapp");
+                    startActivity(sendIntent);
                 }
-                //Log.d("whtsapp click",resultFromTask);
-                DateFormat dateFormatter = new SimpleDateFormat("hh : mm"+"*"+"\n"+"*"+"dd/MM/yyyy");
-                dateFormatter.setLenient(false);
-                Date today = new Date();
-                String s = dateFormatter.format(today);
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                Log.d(TAG,String.valueOf(address));
-                sendIntent.putExtra(Intent.EXTRA_TEXT, "I am in *DANGER*....\n\n" +
-                        "\uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98\n"+
-                        "/ ___|    /  _ \\   / ___| \n" +
-                        "\\___ \\   | |   | |   \\___ \\ \n" +
-                        " ___) |   | |   | |    ___) |\n" +
-                        "|____/   \\___/  |____/ \n" +
-                        "\uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98 \uD83C\uDD98"+
-                        "\n\n"+
-                        "Time : \n"+"*" + s +"*"+ "\n\n"+
-                        "My exact location is : \n http://maps.google.com/maps?q=loc:"
-                        + String.valueOf(mLastLocation.getLatitude()) + "," +
-                        String.valueOf(mLastLocation.getLongitude())+
-                        "\n\nand my estimated address is : \n\n"+"*"+resultFromTask+"*"+"\n\n"+
-                        "_"+"This is an auto generated message.Download the android app now"+"_"+"\n"+
-                        "http://ska-developers.appspot.com/SOS-android-app-beta/");
-                sendIntent.setType("text/plain");
-                sendIntent.setPackage("com.whatsapp");
-                startActivity(sendIntent);
             }
             }
         });
@@ -176,44 +224,95 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     });
                     builder.show();
                 }
-                else{
-                String resultFromTask = null;
-                getAddressFromJSON task = new getAddressFromJSON();
-                try {
-                    resultFromTask = task.execute("").get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-                //Log.d("whtsapp click",resultFromTask);
-                DateFormat dateFormatter = new SimpleDateFormat("hh : mm"+"*"+"\n"+"*"+"dd/MM/yyyy");
-                dateFormatter.setLenient(false);
-                Date today = new Date();
-                String s = dateFormatter.format(today);
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                Log.d(TAG,String.valueOf(address));
-                sendIntent.putExtra(Intent.EXTRA_TEXT, "I am now *SAFE*....\n\n" +
+                else {
+                    if (mLastLocation == null) {
+                        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-                        "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅\n"+
-                        "   _____     ___        ______    ______\n" +
-                        "  / ___/      /   |      / ____/   / ____/\n" +
-                        "  \\__ \\      / /| |     / /_       / __/   \n" +
-                        " ___/ /   / ___ |    / __/     / /___   \n" +
-                        "/____/   /_/  |_|   /_/       /_____/   \n" +
-                        "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅"+
-                        "\n\n"+
-                        "Time : \n"+"*" + s +"*"+ "\n\n"+
-                        "My exact location is : \n http://maps.google.com/maps?q=loc:"
-                        + String.valueOf(mLastLocation.getLatitude()) + "," +
-                        String.valueOf(mLastLocation.getLongitude())+
-                        "\n\nand my estimated address is : \n\n"+"*"+resultFromTask+"*"+"\n\n"+
-                        "_"+"This is an auto generated message.Download the android app now"+"_"+"\n"+
-                        "http://ska-developers.appspot.com/SOS-android-app-beta/");
-                sendIntent.setType("text/plain");
-                sendIntent.setPackage("com.whatsapp");
-                startActivity(sendIntent);
+                        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+                            //to do
+                            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                            builder.setCancelable(true);
+                            builder.setTitle("We were unable to find your location. But we can still inform your contacts.");
+                            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //work to be done here
+                                    dialog.dismiss();
+                                    DateFormat dateFormatter = new SimpleDateFormat("hh : mm" + "*" + "\n" + "*" + "dd/MM/yyyy");
+                                    dateFormatter.setLenient(false);
+                                    Date today = new Date();
+                                    String s = dateFormatter.format(today);
+                                    Intent sendIntent = new Intent();
+                                    sendIntent.setAction(Intent.ACTION_SEND);
+                                    Log.d(TAG, String.valueOf(address));
+                                    sendIntent.putExtra(Intent.EXTRA_TEXT, "I am now *SAFE*....\n\n" +
+
+                                            "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅\n" +
+                                            "   _____     ___        ______    ______\n" +
+                                            "  / ___/      /   |      / ____/   / ____/\n" +
+                                            "  \\__ \\      / /| |     / /_       / __/   \n" +
+                                            " ___/ /   / ___ |    / __/     / /___   \n" +
+                                            "/____/   /_/  |_|   /_/       /_____/   \n" +
+                                            "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅" +
+                                            "\n\n" +
+                                            "Time : \n" + "*" + s + "*" + "\n\n" +
+                                            "_" + "This is an auto generated message.Download the android app now" + "_" + "\n" +
+                                            "http://ska-developers.appspot.com/SOS-android-app-beta/");
+                                    sendIntent.setType("text/plain");
+                                    sendIntent.setPackage("com.whatsapp");
+                                    startActivity(sendIntent);
+                                }
+                            });
+                            builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                            builder.show();
+                        }else{
+                            turnOnLocationSetting(MainActivity.this,mGoogleApiClient);
+                        }
+                    }
+                    else{
+                    String resultFromTask = null;
+                    getAddressFromJSON task = new getAddressFromJSON();
+                    try {
+                        resultFromTask = task.execute("").get();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                    //Log.d("whtsapp click",resultFromTask);
+                    DateFormat dateFormatter = new SimpleDateFormat("hh : mm" + "*" + "\n" + "*" + "dd/MM/yyyy");
+                    dateFormatter.setLenient(false);
+                    Date today = new Date();
+                    String s = dateFormatter.format(today);
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    Log.d(TAG, String.valueOf(address));
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "I am now *SAFE*....\n\n" +
+
+                            "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅\n" +
+                            "   _____     ___        ______    ______\n" +
+                            "  / ___/      /   |      / ____/   / ____/\n" +
+                            "  \\__ \\      / /| |     / /_       / __/   \n" +
+                            " ___/ /   / ___ |    / __/     / /___   \n" +
+                            "/____/   /_/  |_|   /_/       /_____/   \n" +
+                            "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅" +
+                            "\n\n" +
+                            "Time : \n" + "*" + s + "*" + "\n\n" +
+                            "My exact location is : \n http://maps.google.com/maps?q=loc:"
+                            + String.valueOf(mLastLocation.getLatitude()) + "," +
+                            String.valueOf(mLastLocation.getLongitude()) +
+                            "\n\nand my estimated address is : \n\n" + "*" + resultFromTask + "*" + "\n\n" +
+                            "_" + "This is an auto generated message.Download the android app now" + "_" + "\n" +
+                            "http://ska-developers.appspot.com/SOS-android-app-beta/");
+                    sendIntent.setType("text/plain");
+                    sendIntent.setPackage("com.whatsapp");
+                    startActivity(sendIntent);
+                }
                 }
             }
         });
